@@ -1,0 +1,41 @@
+# /etc/systemd/system/govtchat.service
+#
+# Systemd unit file for the Govt Chat API Service
+# Tailored for user 'vpa' with Conda environment 'chatservice'.
+
+[Unit]
+Description=Govt Chat API Service
+# This ensures the network is up before the service starts.
+After=network.target
+
+[Service]
+# --- CONFIGURATION FOR YOUR SERVER ---
+# User and Group to run the service as.
+User=vpa
+Group=vpa
+
+# The absolute path to your project directory.
+WorkingDirectory=/home/vpa/RAG-LLama-JinaV3
+
+# The absolute path to your project's .env file.
+EnvironmentFile=/home/vpa/RAG-LLama-JinaV3/.env
+
+# The command to start the service.
+# This uses the absolute path to the uvicorn executable inside your specific Conda environment.
+ExecStart=/home/vpa/miniconda3/envs/chatservice/bin/uvicorn api:app --host 0.0.0.0 --port 9000
+
+# --- SERVICE BEHAVIOR ---
+# Always restart the service if it crashes.
+Restart=always
+# Wait 5 seconds before restarting.
+RestartSec=5
+
+# Send all logs to the system's journal for easy viewing.
+StandardOutput=journal
+StandardError=journal
+# A unique identifier for logs from this service.
+SyslogIdentifier=govtchat
+
+[Install]
+# This line enables the service to start automatically on system boot.
+WantedBy=multi-user.target
