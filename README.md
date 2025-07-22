@@ -7,3 +7,12 @@ conda create -n ragllama python=3.10 -y
 conda activate ragllama
 pip install -r requirements.txt
 ```
+
+```bash
+cd retriver/
+chmod +x run.sh
+sudo cp retriever.service /etc/systemd/system/retriever.service
+sudo systemctl daemon-reload
+sudo systemctl enable retriever.service
+sudo systemctl start retriever.service
+```

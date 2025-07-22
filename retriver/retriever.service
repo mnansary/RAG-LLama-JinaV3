@@ -1,0 +1,33 @@
+# /etc/systemd/system/retriever.service
+#
+# Systemd service file for the Data Retriever API.
+# This version calls a run script located inside the 'retriver' sub-directory.
+
+[Unit]
+Description=Data Retriever API Service (Conda)
+After=network.target
+
+[Service]
+# --- User and Directory ---
+User=vpa
+Group=vpa
+
+# CRITICAL: The working directory MUST remain the project's ROOT directory,
+# not the directory where the script lives. This is essential for Python imports.
+WorkingDirectory=/home/vpa/RAG-LLama-JinaV3
+
+# --- Execution ---
+# THE KEY CHANGE IS HERE: Update the path to point to the script's new location.
+ExecStart=/home/vpa/RAG-LLama-JinaV3/retriver/run.sh
+
+# --- Process Management ---
+Restart=always
+RestartSec=10
+
+# --- Logging ---
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=RetrieverAPI-Conda
+
+[Install]
+WantedBy=multi-user.target
