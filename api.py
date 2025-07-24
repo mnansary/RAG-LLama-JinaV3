@@ -11,6 +11,7 @@ from typing import Dict
 # Corrected the import to use 'final_chatservice' as per previous steps
 # If your file is named 'chatservice.py', use that instead.
 from chatservice import ProactiveChatService
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- API Setup ---
 app = FastAPI(
@@ -18,6 +19,13 @@ app = FastAPI(
     description="A production-grade API for the Proactive Chat Service with multi-user session management.",
     version="1.1.0",
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+) 
 
 # --- Session Management ---
 # This dictionary will store active chat sessions, mapping a user_id to their own ProactiveChatService instance.

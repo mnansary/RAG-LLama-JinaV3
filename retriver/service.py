@@ -9,6 +9,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware 
 
 # CORRECTED IMPORT: Use a relative import to find the logic file and the correct class name.
 from .logic import RetrieverService
@@ -30,6 +31,15 @@ app = FastAPI(
     description="An API for retrieving documents using JinaV3 embeddings with in-flight batching.",
     version="1.0.0"
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+) 
+
 request_queue = asyncio.Queue()
 
 # --- Pydantic Models for API Contract ---
