@@ -125,13 +125,13 @@ class ProactiveChatService:
     def _run_strategist_stage(self, plan: Dict[str, Any], context: str, user_input: str, history_str: str) -> Generator[str, None, None]:
         """Executes the Strategist stage, streaming the final response."""
         print("\n----- 🎭 Strategist Stage -----")
-        strategy = plan.get("response_strategy", "APOLOGIZE_AND_STATE_LIMITS")
+        strategy = plan.get("response_strategy", "RESPOND_WARMLY")
         print(f"✍️ Executing strategy: '{strategy}'")
 
         prompt_template = STRATEGIST_PROMPTS.get(strategy)
         if not prompt_template:
-            print(f"❌ WARNING: Invalid strategy '{strategy}'. Defaulting to apology.")
-            prompt_template = STRATEGIST_PROMPTS["APOLOGIZE_AND_STATE_LIMITS"]
+            print(f"❌ WARNING: Invalid strategy '{strategy}'. Defaulting to warm response.")
+            prompt_template = STRATEGIST_PROMPTS["RESPOND_WARMLY"]
         
         # Format the prompt using the LangChain template
         formatted_prompt = prompt_template.format_prompt(
@@ -148,7 +148,7 @@ class ProactiveChatService:
             temperature=0.0,
             max_tokens=4096,
             repetition_penalty=1.2
-        )
+        ),strategy
 
     def chat(self, user_input: str) -> Generator[Dict[str, Any], None, None]:
         """
@@ -164,7 +164,7 @@ class ProactiveChatService:
 
         combined_context, retrieved_passages = self._run_retriever_stage(plan)
 
-        answer_generator = self._run_strategist_stage(plan, combined_context, user_input, history_str)
+        answer_generator,strategy = self._run_strategist_stage(plan, combined_context, user_input, history_str)
 
         full_answer_list = []
         for chunk in answer_generator:
@@ -176,21 +176,24 @@ class ProactiveChatService:
 
         final_answer = "".join(full_answer_list).strip()
         self.history.append((user_input, final_answer))
+        if strategy in ["PROVIDE_DIRECT_INFO","REDIRECT_AND_CLARIFY"]:
+            sources = []
+            if retrieved_passages:
+                unique_urls = set()
+                unique_pids = set()
+                for doc in retrieved_passages:
+                    if doc.get("metadata") and doc["metadata"].get("url"):
+                        unique_urls.add(doc["metadata"]["url"])
+                    if doc.get("metadata") and doc["metadata"].get("passage_id"):
+                        unique_pids.add(doc["metadata"]["passage_id"])
+                sources = list(unique_urls)+[f"source_passage:{i}" for i in list(unique_pids)]
+            
+            print(f"\nFinal sources extracted: {sources}")
 
-        sources = []
-        if retrieved_passages:
-            unique_urls = set()
-            for doc in retrieved_passages:
-                if doc.get("metadata") and doc["metadata"].get("url"):
-                    unique_urls.add(doc["metadata"]["url"])
-            sources = list(unique_urls)
-        
-        print(f"\nFinal sources extracted: {sources}")
-
-        yield {
-            "type": "final_data",
-            "content": {"sources": sources}
-        }
+            yield {
+                "type": "final_data",
+                "content": {"sources": sources}
+            }
         print("\n-------------------- STREAM COMPLETE --------------------")
 
 
